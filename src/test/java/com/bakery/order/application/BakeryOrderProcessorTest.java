@@ -62,6 +62,15 @@ public class BakeryOrderProcessorTest {
 		assertEquals(expected, out);
 	}
 	
-
+	@Test
+	public void testOrderFourteenMuffin() {		
+		BakeryOrderRequest order = new BakeryOrderRequest();
+		order.addProductToOrder("MB11", 14);
+		BakeryOrderResponse out = processor.process( order );
+		
+		List<ProductResponse> productResponseList = List.of( new ProductResponse("MB11", 14, 54.8, List.of(new ProductPackResponse(1, 8, 24.95), new ProductPackResponse(3, 2, 9.95))));
+		BakeryOrderResponse expected = new BakeryOrderResponse(productResponseList);		
+		assertEquals(expected, out);
+	}
 
 }
