@@ -1,11 +1,14 @@
 package com.bakery.order.application;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 import java.util.List;
 
 import org.junit.Test;
 
+import com.bakery.order.application.exception.CombinationNotFoundException;
+import com.bakery.order.application.exception.ProductNotFoundException;
 import com.bakery.order.domain.BakeryProductRepository;
 import com.bakery.order.domain.Product;
 import com.bakery.order.infrastructure.InMemoryBakeryProductRepository;
@@ -165,5 +168,36 @@ public class BakeryOrderProcessorTest {
 
 		assertEquals(expected, out);
 	}
+
+	
+	@Test
+	public void testProductNotFoundException() {
+		BakeryOrderRequest order = new BakeryOrderRequest();
+		order.addProductToOrder("VS555", 10);		
+		assertThrows(ProductNotFoundException.class, () -> processor.process(order) );		
+	}
+	
+	
+	@Test
+	public void testCombinationNotFoundException1() {
+		BakeryOrderRequest order = new BakeryOrderRequest();
+		order.addProductToOrder("VS5", 2);		
+		assertThrows(CombinationNotFoundException.class, () -> processor.process(order) );		
+	}
+	
+	@Test
+	public void testCombinationNotFoundException2() {
+		BakeryOrderRequest order = new BakeryOrderRequest();
+		order.addProductToOrder("VS5", 4);		
+		assertThrows(CombinationNotFoundException.class, () -> processor.process(order) );		
+	}
+	
+	@Test
+	public void testCombinationNotFoundException3() {
+		BakeryOrderRequest order = new BakeryOrderRequest();
+		order.addProductToOrder("VS5", 7);		
+		assertThrows(CombinationNotFoundException.class, () -> processor.process(order) );		
+	}
+	
 
 }

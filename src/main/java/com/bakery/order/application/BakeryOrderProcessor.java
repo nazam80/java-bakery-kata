@@ -3,12 +3,13 @@ package com.bakery.order.application;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import com.bakery.order.application.exception.CombinationNotFoundException;
+import com.bakery.order.application.exception.ProductNotFoundException;
 import com.bakery.order.domain.BakeryProductRepository;
 import com.bakery.order.domain.Product;
 import com.bakery.order.domain.ProductPack;
@@ -29,7 +30,7 @@ public class BakeryOrderProcessor {
 
 	private ProductResponse processProductEntry(Entry<String, Integer> productEntry) {
 		return repo.findProduct(productEntry.getKey()).map( p -> mapProductResponse(p, productEntry.getValue()))
-				.orElseThrow(RuntimeException::new);
+				.orElseThrow(ProductNotFoundException::new);
 
 	}
 
@@ -89,14 +90,13 @@ public class BakeryOrderProcessor {
 	private void tryOtherCombination(Deque<ProductPackResponse> combination, List<ProductPack> productPackList,
 			int amount) {
 		int remainingAmount = amount;
-		if( combination.isEmpty() || combination.size()==1) {
-			throw new RuntimeException("Not found");
-		}
+		checkForEmptyCombination(combination);
 		//Remove last pack
 		ProductPackResponse lastProductPackResponse = combination.pollLast();
-		if( isProductPackResponseTheLastProductPackInList(lastProductPackResponse, productPackList) ) {				
+		if( isProductPackResponseTheLastProductPackInList(lastProductPackResponse, productPackList) ) {
+			checkForEmptyCombination(combination);
 			remainingAmount += lastProductPackResponse.getPackAmount() * lastProductPackResponse.getProductPerPackAmount();
-			lastProductPackResponse = combination.pollLast(); //Last product response is last - 1 now 				
+			lastProductPackResponse = combination.pollLast(); //Last product response is last - 1 now			
 		}
 		//If last pack removed had multiple packs, reduce one pack and insert again 
 		if( lastProductPackResponse.getPackAmount() > 1) {
@@ -105,6 +105,12 @@ public class BakeryOrderProcessor {
 		remainingAmount += lastProductPackResponse.getProductPerPackAmount();						
 		int nextIndex = calculateNextIndexForCombination(lastProductPackResponse, productPackList);
 		calculateProductPacksCombination(combination, nextIndex, remainingAmount, productPackList);
+	}
+
+	private void checkForEmptyCombination(Deque<ProductPackResponse> combination) {
+		if( combination.isEmpty() ) {
+			throw new CombinationNotFoundException();
+		}
 	}
 	
 	private boolean isProductPackResponseTheLastProductPackInList(ProductPackResponse productPackResponse, List<ProductPack> productPackList ) {
